@@ -20,25 +20,32 @@ class GitHubClient:
       - Handle rate-limiting transparently.
     """
 
-    BASE_URL = "https://api.github.com"
-
-    def __init__(self, token: str = "", timeout: int = 30) -> None:
+    def __init__(self, base_url: str, token: str = "", timeout: int = 30) -> None:
         headers: dict[str, str] = {"Accept": "application/vnd.github+json"}
         if token:
             headers["Authorization"] = f"Bearer {token}"
 
         self._client = httpx.Client(
-            base_url=self.BASE_URL,
+            base_url=base_url,
             headers=headers,
             timeout=timeout,
         )
         
     def search_repos(
-        self, language: str, page: int = 1, per_page: int = 30
+        self,
+        language: str,
+        page: int = 1,
+        per_page: int = 30,
+        min_stars: int = 50,
     ) -> list[dict]:
-        """Search popular repos by language, sorted by stars descending."""
+        """Search repos with recent activity, sorted by stars descending.
+
+        Filters repos pushed in the last 30 days with at least *min_stars*.
+        """
+        query = f"language:{language} stars:>={min_stars}"
+
         params = {
-            "q": f"language:{language}",
+            "q": query,
             "sort": "stars",
             "order": "desc",
             "per_page": per_page,
@@ -48,7 +55,8 @@ class GitHubClient:
         resp = self._get("/search/repositories", params=params)
         items = resp.json().get("items", [])
         logger.info(
-            "Search page %d for %s: %d repos found", page, language, len(items)
+            "Search page %d for %s: %d repos found",
+            page, language, len(items),
         )
         return items
 
