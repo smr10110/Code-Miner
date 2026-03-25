@@ -27,10 +27,6 @@ REDIS_KEY_REPOS: str = "processed_repos"
 REDIS_KEY_TOTAL: str = "total_words_sent"
 REDIS_KEY_STATUS: str = "miner_status"
 
-# -- Languages to mine --------------------------------------------------------
-
-LANGUAGES: list[str] = ["python", "java"]
-
 # Map file extensions to language names (used for per-language ranking keys).
 EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".py": "python",
