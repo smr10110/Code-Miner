@@ -4,9 +4,23 @@ Sistema que analiza repositorios populares de GitHub para descubrir las palabras
 
 ## Arquitectura
 
-```
-GitHub API  ──>  Miner  ──>  Redis  <──  Visualizer API  <──  Dashboard
-  (lee repos)   (escribe)   (sorted sets)   (lee)           (muestra)
+```mermaid
+graph LR
+    A[GitHub API] -->|lee repos| B[Miner]
+    B -->|ZINCRBY| C[(Redis)]
+    C -->|ZREVRANGE| D[FastAPI]
+    D -->|HTTP| E[Streamlit Dashboard]
+
+    subgraph Contenedor 1
+        B
+    end
+    subgraph Contenedor 2
+        C
+    end
+    subgraph Contenedor 3
+        D
+        E
+    end
 ```
 
 El sistema se compone de 3 contenedores Docker:
