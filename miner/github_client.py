@@ -3,6 +3,7 @@
 import base64
 import logging
 import time
+from datetime import datetime, timedelta, timezone
 from typing import Generator
 
 import httpx
@@ -33,16 +34,13 @@ class GitHubClient:
         
     def search_repos(
         self,
-        language: str,
         page: int = 1,
         per_page: int = 30,
-        min_stars: int = 50,
+        min_stars: int = 100,
     ) -> list[dict]:
-        """Search repos with recent activity, sorted by stars descending.
-
-        Filters repos pushed in the last 30 days with at least *min_stars*.
-        """
-        query = f"language:{language} stars:>={min_stars}"
+        """Search repos with recent activity (last 30 days), sorted by stars."""
+        since = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%d")
+        query = f"stars:>={min_stars} pushed:>={since}"
 
         params = {
             "q": query,
@@ -54,10 +52,7 @@ class GitHubClient:
 
         resp = self._get("/search/repositories", params=params)
         items = resp.json().get("items", [])
-        logger.info(
-            "Search page %d for %s: %d repos found",
-            page, language, len(items),
-        )
+        logger.info("Search page %d: %d repos found", page, len(items))
         return items
 
     def get_source_files(
